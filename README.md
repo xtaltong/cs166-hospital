@@ -95,7 +95,7 @@ changes/extensions, etc. (20%).
 You will design a hospital database management system that serves the needs of hospital
 managers, doctors, and patients. Each of these types of individuals needs access to the following
 information:
-#### Hospital Management:
+### Hospital Management:
 1. Given a department ID, get the active appointments for the week.
 2. Given a department ID and a date, find (i) the available appointments, (ii) the active
 appointments, (iii) the list of patients who made appointments on that given date.
