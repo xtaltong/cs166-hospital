@@ -23,11 +23,7 @@ CREATE DOMAIN _STATUS VARCHAR(2) CHECK (VALUE IN ('PA', 'AC', 'AV', 'WL')); --Pa
 ------------
 CREATE TABLE Patient
 (
-<<<<<<< Updated upstream
 	patient_ID INTEGER NOT NULL,
-=======
-	patient_ID SERIAL NOT NULL,
->>>>>>> Stashed changes
 	name VARCHAR(128) NOT NULL,	
 	gtype _GENDER NOT NULL,
 	age INTEGER NOT NULL,
@@ -38,22 +34,14 @@ CREATE TABLE Patient
 
 CREATE TABLE Hospital
 (
-<<<<<<< Updated upstream
 	hospital_ID INTEGER NOT NULL,
-=======
-	hospital_ID SERIAL NOT NULL,
->>>>>>> Stashed changes
 	name VARCHAR(64) NOT NULL,	
 	PRIMARY KEY (hospital_ID)
 );
 
 CREATE TABLE Department
 (
-<<<<<<< Updated upstream
 	dept_ID INTEGER NOT NULL,
-=======
-	dept_ID SERIAL NOT NULL,
->>>>>>> Stashed changes
 	name VARCHAR(32) NOT NULL,
 	hid INTEGER NOT NULL,
 	PRIMARY KEY (dept_ID),
@@ -62,11 +50,7 @@ CREATE TABLE Department
 
 CREATE TABLE Staff
 (
-<<<<<<< Updated upstream
 	staff_ID INTEGER NOT NULL,
-=======
-	staff_ID SERIAL NOT NULL,
->>>>>>> Stashed changes
 	name VARCHAR(128) NOT NULL,	
 	hid INTEGER NOT NULL,
 	PRIMARY KEY (staff_ID),
@@ -75,11 +59,7 @@ CREATE TABLE Staff
 
 CREATE TABLE Doctor
 (
-<<<<<<< Updated upstream
 	doctor_ID INTEGER NOT NULL,
-=======
-	doctor_ID SERIAL NOT NULL,
->>>>>>> Stashed changes
 	name VARCHAR(128),
 	specialty VARCHAR(24),
 	did INTEGER NOT NULL,
@@ -90,11 +70,7 @@ CREATE TABLE Doctor
 
 CREATE TABLE Appointment
 (	
-<<<<<<< Updated upstream
 	appnt_ID INTEGER NOT NULL,	
-=======
-	appnt_ID SERIAL NOT NULL,	
->>>>>>> Stashed changes
 	adate DATE NOT NULL,
 	time_slot VARCHAR(11),
 	status _STATUS,
@@ -245,10 +221,3 @@ COPY has_appointment (
 FROM 'has_appointment.csv'
 WITH DELIMITER ',';
 
--- Update sequences after all our data is inserted
--- https://stackoverflow.com/a/9108929
-SELECT setval('patient_patient_id_seq', (SELECT MAX(patient_id) FROM Patient));
-SELECT setval('hospital_hospital_id_seq', (SELECT MAX(hospital_id) FROM Hospital));
-SELECT setval('staff_staff_id_seq', (SELECT MAX(staff_id) FROM Staff));
-SELECT setval('doctor_doctor_id_seq', (SELECT MAX(doctor_id) FROM Doctor));
-SELECT setval('appointment_appnt_id_seq', (SELECT MAX(appnt_id) FROM Appointment));
