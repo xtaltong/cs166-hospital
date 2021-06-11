@@ -13,6 +13,7 @@
 import java.sql.DriverManager;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -20,6 +21,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -254,7 +256,7 @@ public class DBproject {
 				System.out.println("8. Find total number of patients per doctor with a given status");
 				System.out.println("9. < EXIT");
 
-				switch (readInt('choice')) {
+				switch (readInt("choice")) {
 					case 1:
 						AddDoctor(esql);
 						break;
@@ -303,7 +305,7 @@ public class DBproject {
 		int input;
 		// returns only if a correct value is given.
 		do {
-			System.out.print(String.format("Enter %s: ");
+			System.out.print(String.format("Enter %s: ", name));
 			try { // read the integer, parse it and break.
 				input = Integer.parseInt(in.readLine());
 				break;
@@ -315,85 +317,102 @@ public class DBproject {
 		return input;
 	}
 
-	public static String readString(String name, int limit, String[] allowed = null) {
-		do {
-			System.out.print(String.format("Enter %s (max %s chars): "));
-			String input = in.readLine();
-			if (input <= limit && contains(allowed, input))
-				return input;
-			System.out.println("Invalid choice.")
-		} while (true);
+	public static String readString(String name, int limit, String[] allowed) {
+		try {
+			do {
+				System.out.print(String.format("Enter %s (max %d chars): ", name, limit));
+				String input = in.readLine();
+				if (input.length() <= limit && contains(allowed, input))
+					return input;
+				System.out.println("Invalid choice.");
+			} while (true);
+		} catch (IOException e) {
+			System.out.println("Exception occured with buffered reader");
+			System.exit(2);
+		}
+		return null;
 	}
 
-	public static void AddDoctor(DBproject esql) {// 1
-		name = readString("doctor name", 128);
-		specialty = readString("doctor specialty", 24);
-		department_id = readInt("doctor department id");
+	public static String readString(String name, int limit){
+		return readString(name, limit, null);
+	}
 
-		String query = String.format("INSERT INTO Doctor(name, specialty, did) VALUES(?, ?, ?);");
+	public static void AddDoctor(DBproject esql) throws SQLException {// 1
+		String name = readString("doctor name", 128);
+		String specialty = readString("doctor specialty", 24);
+		int departmentID = readInt("doctor department id");
+
+		String query = "INSERT INTO Doctor(name, specialty, did) VALUES(?, ?, ?);";
 		PreparedStatement stmt = esql._connection.prepareStatement(query);
 		stmt.setString(1, name);
 		stmt.setString(2, specialty);
-		stmt.setInt(3, department_id);
+		stmt.setInt(3, departmentID);
 		stmt.executeUpdate();
 	}
 
-	public static void AddPatient(DBproject esql) {// 2
-		name = readString("patient name", 128);
-		gender = readString("patient gender ('F' or 'M')", 1, new String[] { "F", "M" });
-		age = readInt("age");
-		address = readString("address", 256);
+	public static void AddPatient(DBproject esql) throws SQLException {// 2
+		String name = readString("patient name", 128);
+		String gender = readString("patient gender ('F' or 'M')", 1, new String[] { "F", "M" });
+		int age = readInt("age");
+		String address = readString("address", 256);
 
 
-		String query = String.format("INSERT INTO Patient(name, gtype, age, address) VALUES(?, ?, ?, ?);");
+		String query = "INSERT INTO Patient(name, gtype, age, address) VALUES(?, ?, ?, ?);";
 		PreparedStatement stmt = esql._connection.prepareStatement(query);
 		stmt.setString(1, name);
 		stmt.setString(2, gender);
 		stmt.setInt(3, age);
-		stmt.setInt(4, address);
+		stmt.setString(4, address);
 		stmt.executeUpdate();
 	}
 
-	public static void AddAppointment(DBproject esql) {// 3
-		date = readString("appointment date", 10);
-		time = readString("time slot", 11);
-		status = readString("appointment status", 2, new String[] { "PA", "AC", "AV", "WL" })
+	public static void AddAppointment(DBproject esql) throws SQLException {// 3
+		String date = readString("appointment date", 10);
+		String time = readString("time slot", 11);
+		String status = readString("appointment status", 2, new String[] { "PA", "AC", "AV", "WL" });
 
-		String query = String.format("INSERT INTO Appointment(adate, time_slot, status) VALUES(?, ?, ?);");
+		String query = "INSERT INTO Appointment(adate, time_slot, status) VALUES(?, ?, ?);";
 		PreparedStatement stmt = esql._connection.prepareStatement(query);
 		stmt.setString(1, date);
 		stmt.setString(2, time);
-		stmt.setInt(3, status);
+		stmt.setString(3, status);
 		stmt.executeUpdate();
 	}
 
-	public static void MakeAppointment(DBproject esql) {// 4
+	public static void MakeAppointment(DBproject esql) throws SQLException {// 4
 		// Given a patient, a doctor and an appointment of the doctor that s/he wants to
 		// take, add an appointment to the DB
+		int patientID = readInt("patient id");
+		int doctorID = readInt("doctor id");
+		int appntID = readInt("appointment id");
+
+		List<List<String>> appntStatus = esql.executeQueryAndReturnResult(String.format("SELECT status FROM Appointment WHERE appnt_id=%d;", appntID));
+		System.out.println(appntStatus);
+
 	}
 
-	public static void ListAppointmentsOfDoctor(DBproject esql) {// 5
+	public static void ListAppointmentsOfDoctor(DBproject esql) throws SQLException {// 5
 		// For a doctor ID and a date range, find the list of active and available
 		// appointments of the doctor
 	}
 
-	public static void ListAvailableAppointmentsOfDepartment(DBproject esql) {// 6
+	public static void ListAvailableAppointmentsOfDepartment(DBproject esql) throws SQLException {// 6
 		// For a department name and a specific date, find the list of available
 		// appointments of the department
 	}
 
-	public static void ListStatusNumberOfAppointmentsPerDoctor(DBproject esql) {// 7
+	public static void ListStatusNumberOfAppointmentsPerDoctor(DBproject esql) throws SQLException {// 7
 		// Count number of different types of appointments per doctors and list them in
 		// descending order
 	}
 
-	public static void FindPatientsCountWithStatus(DBproject esql) {// 8
+	public static void FindPatientsCountWithStatus(DBproject esql) throws SQLException {// 8
 		// Find how many patients per doctor there are with a given status (i.e. PA, AC,
 		// AV, WL) and list that number per doctor.
 	}
 
 	// utility functions
-	public boolean contains(String[] allowed, String choice) {
+	public static boolean contains(String[] allowed, String choice) {
 		if (allowed == null)
 			return true;
 		for (String a : allowed) {
