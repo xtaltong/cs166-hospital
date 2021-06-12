@@ -22,8 +22,11 @@ import java.io.FileReader;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.IOException;
+import java.util.*;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.stream.IntStream;
 
 /**
  * This class defines a simple embedded SQL utility class that is designed to
@@ -57,7 +60,7 @@ public class DBproject {
 	 * Method to execute an update SQL statement. Update SQL instructions includes
 	 * CREATE, INSERT, UPDATE, DELETE, and DROP.
 	 * 
-	 * @param sql the input SQL string
+	 * @param sql the input SQL String
 	 * @throws java.sql.SQLException when update failed
 	 */
 	public void executeUpdate(String sql) throws SQLException {
@@ -75,7 +78,7 @@ public class DBproject {
 	 * Method to execute an input query SQL instruction (i.e. SELECT). This method
 	 * issues the query to the DBMS and outputs the results to standard out.
 	 * 
-	 * @param query the input query string
+	 * @param query the input query String
 	 * @return the number of rows returned
 	 * @throws java.sql.SQLException when failed to execute the query
 	 */
@@ -118,7 +121,7 @@ public class DBproject {
 	 * issues the query to the DBMS and returns the results as a list of records.
 	 * Each record in turn is a list of attribute values
 	 * 
-	 * @param query the input query string
+	 * @param query the input query String
 	 * @return the query result as a list of records
 	 * @throws java.sql.SQLException when failed to execute the query
 	 */
@@ -154,7 +157,7 @@ public class DBproject {
 	 * Method to execute an input query SQL instruction (i.e. SELECT). This method
 	 * issues the query to the DBMS and returns the number of results
 	 * 
-	 * @param query the input query string
+	 * @param query the input query String
 	 * @return the number of rows returned
 	 * @throws java.sql.SQLException when failed to execute the query
 	 */
@@ -188,7 +191,7 @@ public class DBproject {
 	public int getCurrSeqVal(String sequence) throws SQLException {
 		Statement stmt = this._connection.createStatement();
 
-		ResultSet rs = stmt.executeQuery(String.format("Select currval('%s')", sequence));
+		ResultSet rs = stmt.executeQuery(String.format("SELECT currval('%s');", sequence));
 		if (rs.next())
 			return rs.getInt(1);
 		return -1;
@@ -243,47 +246,53 @@ public class DBproject {
 
 			boolean keepon = true;
 			while (keepon) {
-				System.out.println("MAIN MENU");
-				System.out.println("---------");
-				System.out.println("1. Add Doctor");
-				System.out.println("2. Add Patient");
-				System.out.println("3. Add Appointment");
-				System.out.println("4. Make an Appointment");
-				System.out.println("5. List appointments of a given doctor");
-				System.out.println("6. List all available appointments of a given department");
-				System.out.println(
-						"7. List total number of different types of appointments per doctor in descending order");
-				System.out.println("8. Find total number of patients per doctor with a given status");
-				System.out.println("9. < EXIT");
+				try {
 
-				switch (readInt("choice")) {
-					case 1:
-						AddDoctor(esql);
-						break;
-					case 2:
-						AddPatient(esql);
-						break;
-					case 3:
-						AddAppointment(esql);
-						break;
-					case 4:
-						MakeAppointment(esql);
-						break;
-					case 5:
-						ListAppointmentsOfDoctor(esql);
-						break;
-					case 6:
-						ListAvailableAppointmentsOfDepartment(esql);
-						break;
-					case 7:
-						ListStatusNumberOfAppointmentsPerDoctor(esql);
-						break;
-					case 8:
-						FindPatientsCountWithStatus(esql);
-						break;
-					case 9:
-						keepon = false;
-						break;
+					System.out.println("MAIN MENU");
+					System.out.println("---------");
+					System.out.println("1. Add Doctor");
+					System.out.println("2. Add Patient");
+					System.out.println("3. Add Appointment");
+					System.out.println("4. Make an Appointment");
+					System.out.println("5. List appointments of a given doctor");
+					System.out.println("6. List all available appointments of a given department");
+					System.out.println(
+							"7. List total number of different types of appointments per doctor in descending order");
+					System.out.println("8. Find total number of patients per doctor with a given status");
+					System.out.println("9. < EXIT");
+
+					switch (readInt("choice")) {
+						case 1:
+							AddDoctor(esql);
+							break;
+						case 2:
+							AddPatient(esql);
+							break;
+						case 3:
+							AddAppointment(esql);
+							break;
+						case 4:
+							MakeAppointment(esql);
+							break;
+						case 5:
+							ListAppointmentsOfDoctor(esql);
+							break;
+						case 6:
+							ListAvailableAppointmentsOfDepartment(esql);
+							break;
+						case 7:
+							ListStatusNumberOfAppointmentsPerDoctor(esql);
+							break;
+						case 8:
+							FindPatientsCountWithStatus(esql);
+							break;
+						case 9:
+							keepon = false;
+							break;
+					}
+				}
+				catch (Exception e) {
+					System.err.println(e.getMessage());
 				}
 			}
 		} catch (Exception e) {
@@ -348,6 +357,8 @@ public class DBproject {
 		stmt.setString(2, specialty);
 		stmt.setInt(3, departmentID);
 		stmt.executeUpdate();
+
+		System.out.println("Successfully added doctor.\n");
 	}
 
 	public static void AddPatient(DBproject esql) throws SQLException {// 2
@@ -356,27 +367,34 @@ public class DBproject {
 		int age = readInt("age");
 		String address = readString("address", 256);
 
-
-		String query = "INSERT INTO Patient(name, gtype, age, address) VALUES(?, ?, ?, ?);";
+		String query = "INSERT INTO Patient(name, gtype, age, address, number_of_appts) VALUES(?, ?, ?, ?, 0);";
 		PreparedStatement stmt = esql._connection.prepareStatement(query);
 		stmt.setString(1, name);
 		stmt.setString(2, gender);
 		stmt.setInt(3, age);
 		stmt.setString(4, address);
 		stmt.executeUpdate();
+
+		System.out.println("Successfully added patient.\n");
 	}
 
 	public static void AddAppointment(DBproject esql) throws SQLException {// 3
 		String date = readString("appointment date", 10);
 		String time = readString("time slot", 11);
 		String status = readString("appointment status", 2, new String[] { "PA", "AC", "AV", "WL" });
+		int did = readInt("doctor id");
 
 		String query = "INSERT INTO Appointment(adate, time_slot, status) VALUES(?, ?, ?);";
 		PreparedStatement stmt = esql._connection.prepareStatement(query);
-		stmt.setString(1, date);
+		stmt.setDate(1, java.sql.Date.valueOf(date));
 		stmt.setString(2, time);
 		stmt.setString(3, status);
 		stmt.executeUpdate();
+
+		int newID = esql.getCurrSeqVal("appointment_appnt_id_seq");
+		esql.executeUpdate(String.format("INSERT INTO has_appointment(appt_id, doctor_id) VALUES (%d, %d)", newID, did));
+
+		System.out.println(String.format("Successfully added appointment %d.\n", newID));
 	}
 
 	public static void MakeAppointment(DBproject esql) throws SQLException {// 4
@@ -386,29 +404,137 @@ public class DBproject {
 		int doctorID = readInt("doctor id");
 		int appntID = readInt("appointment id");
 
-		List<List<String>> appntStatus = esql.executeQueryAndReturnResult(String.format("SELECT status FROM Appointment WHERE appnt_id=%d;", appntID));
-		System.out.println(appntStatus);
+		List<List<String>> results = esql.executeQueryAndReturnResult(String.format("SELECT adate, time_slot, status FROM Appointment WHERE appnt_id=%d;", appntID));
+		List<String> appointment = results.get(0);
+		String status = appointment.get(2);
+		System.out.println(String.format("The status of this appointment is %s.", status));
 
+		if (status.equals("AV")) {
+			// update status to active
+			esql.executeUpdate(String.format("UPDATE Appointment SET status='AC' WHERE appnt_id=%d;", appntID));
+
+			// add the appointment
+			esql.executeUpdate(String.format("INSERT INTO has_appointment(appt_id, doctor_id) VALUES (%d, %d);", appntID, doctorID));
+			System.out.println(String.format("Successfully reserved appointment."));
+		} else if (status.equals("AC") || status.equals("WL")) {
+			System.out.println("Appointment is already reserved, adding to the waitlist.");
+
+			// waitlist this appointment
+			esql.executeUpdate(String.format("INSERT INTO Appointment(adate, time_slot, status) VALUES('%s', '%s', '%s');", appointment.get(0), appointment.get(1), "WL"));
+
+			int newID = esql.getCurrSeqVal("appointment_appnt_id_seq");
+			esql.executeUpdate(String.format("INSERT INTO has_appointment(appt_id, doctor_id) VALUES (%d, %d);", newID, doctorID));
+			System.out.println(String.format("Successfully waitlisted new appointment. Appointment ID: %d", newID));
+		} else {
+			System.out.println(String.format("Invalid appointment status, not doing anything."));
+			return;
+		}
+
+		// increase the amount of appointments the patient has
+		esql.executeUpdate(String.format("UPDATE Patient SET number_of_appts=number_of_appts+1 WHERE patient_ID=%d;", patientID));
+		System.out.println();
 	}
 
 	public static void ListAppointmentsOfDoctor(DBproject esql) throws SQLException {// 5
 		// For a doctor ID and a date range, find the list of active and available
 		// appointments of the doctor
+
+		int did = readInt("doctor ID");
+		String bdate = readString("beginning date of date range", 24);
+		String edate = readString("end date of date range", 24);
+		
+		System.out.println(String.format("Doctor %d has the following active and available appointments in this date range:", did));
+		esql.executeQueryAndPrintResult(String.format("SELECT appnt_id, adate, time_slot, status FROM Appointment INNER JOIN has_appointment ON Appointment.appnt_id=has_appointment.appt_id WHERE has_appointment.doctor_id=%d AND (Appointment.status='AV' OR Appointment.status='AC') AND (Appointment.adate BETWEEN '%s' and '%s');", did, bdate, edate));
+		System.out.println();
 	}
 
 	public static void ListAvailableAppointmentsOfDepartment(DBproject esql) throws SQLException {// 6
 		// For a department name and a specific date, find the list of available
 		// appointments of the department
+		String dname = readString("department name", 32);
+		String date = readString("date", 24);
+		
+		// get the hospital id of the department
+		List<List<String>> departments = esql.executeQueryAndReturnResult(String.format("SELECT dept_id, hid FROM Department WHERE Department.name='%s';", dname));
+		for (List<String> row : departments) {
+			int did = Integer.parseInt(row.get(0));
+			int hid = Integer.parseInt(row.get(1));
+
+			System.out.println(String.format("The %s department in hospital %d has the following appointments available on that date:", dname, hid));
+			esql.executeQueryAndPrintResult(String.format("SELECT appnt_id, adate, time_slot FROM Appointment INNER JOIN has_appointment ON Appointment.appnt_id=has_appointment.appt_id INNER JOIN Doctor ON has_appointment.doctor_id=Doctor.doctor_id WHERE Appointment.adate='%s' AND Doctor.did=%d AND Appointment.status='AV';", date, did));
+			System.out.println();
+		}
+
+		System.out.println();
 	}
 
 	public static void ListStatusNumberOfAppointmentsPerDoctor(DBproject esql) throws SQLException {// 7
 		// Count number of different types of appointments per doctors and list them in
 		// descending order
+		
+		String[] appointmentTypes = new String[] { "WL", "PA", "AC", "AV" };
+		// a mapping of doctor_id: <wl, pa, ac, av>
+		HashMap<Integer, List<Integer>> doctorAppointments = new HashMap<Integer, List<Integer>>();
+
+		List<List<String>> WLList = esql.executeQueryAndReturnResult(String.format("SELECT doctor_id, COUNT(*) FROM Appointment INNER JOIN has_appointment ON Appointment.appnt_id = has_appointment.appt_id WHERE Appointment.status='WL' GROUP BY doctor_id;"));
+		PopulateDoctorAppointments(doctorAppointments, WLList, 0);
+		
+		List<List<String>> PAList = esql.executeQueryAndReturnResult(String.format("SELECT doctor_id, COUNT(*) FROM Appointment INNER JOIN has_appointment ON Appointment.appnt_id = has_appointment.appt_id WHERE Appointment.status='WL' GROUP BY doctor_id;"));
+		PopulateDoctorAppointments(doctorAppointments, PAList, 1);
+		
+		List<List<String>> ACList = esql.executeQueryAndReturnResult(String.format("SELECT doctor_id, COUNT(*) FROM Appointment INNER JOIN has_appointment ON Appointment.appnt_id = has_appointment.appt_id WHERE Appointment.status='AC' GROUP BY doctor_id;"));
+		PopulateDoctorAppointments(doctorAppointments, ACList, 2);
+		
+		List<List<String>> AVList = esql.executeQueryAndReturnResult(String.format("SELECT doctor_id, COUNT(*) FROM Appointment INNER JOIN has_appointment ON Appointment.appnt_id = has_appointment.appt_id WHERE Appointment.status='AV' GROUP BY doctor_id;"));
+		PopulateDoctorAppointments(doctorAppointments, AVList, 3);
+
+		for (Map.Entry<Integer, List<Integer>> e : doctorAppointments.entrySet()) {
+			List<Integer> numAppts = e.getValue();
+			// sort the number of appts each doctor has
+			// https://stackoverflow.com/a/35718576
+			int[] sortedIndices = IntStream.range(0, numAppts.size())
+				.boxed()
+				.sorted((i, j) -> numAppts.get(j) - numAppts.get(i))
+				.mapToInt(x -> x).toArray();
+
+			List<String> sortedNumAppts = new ArrayList<String>();
+			for (int i : sortedIndices) {
+				sortedNumAppts.add(String.format("%d %s", numAppts.get(i), appointmentTypes[i]));
+			}
+			System.out.println(String.format("Doctor %d: %s", e.getKey(), String.join(", ", sortedNumAppts)));
+		}
+
+		System.out.println();
+	}
+
+	private static void PopulateDoctorAppointments(HashMap<Integer, List<Integer>> doctorAppointments, List<List<String>> queryResult, int index) {
+		for (List<String> row : queryResult) {
+			int doctorID = Integer.parseInt(row.get(0));
+			int amount = Integer.parseInt(row.get(1));
+
+			List<Integer> appointments = doctorAppointments.get(doctorID);
+			if (appointments == null) { // first time adding this doctor in
+				List<Integer> newAppts = Arrays.asList(0, 0, 0, 0);
+				doctorAppointments.put(doctorID, newAppts);
+				appointments = newAppts;
+			}
+
+			appointments.set(index, amount);
+		}
 	}
 
 	public static void FindPatientsCountWithStatus(DBproject esql) throws SQLException {// 8
 		// Find how many patients per doctor there are with a given status (i.e. PA, AC,
 		// AV, WL) and list that number per doctor.
+
+		String status = readString("appointment status", 2, new String[] { "PA", "AC", "AV", "WL" });
+		String query = String.format("SELECT doctor_id, COUNT(*) FROM Appointment INNER JOIN has_appointment ON Appointment.appnt_id=has_appointment.appt_id WHERE Appointment.status='%s' GROUP BY doctor_id;", status);
+
+		List<List<String>> results = esql.executeQueryAndReturnResult(query);
+		for (List<String> row : results) {
+			System.out.println(String.format("Doctor %s has %s %s appointments.", row.get(0), row.get(1), status));
+		}
+		System.out.println();
 	}
 
 	// utility functions
@@ -416,7 +542,7 @@ public class DBproject {
 		if (allowed == null)
 			return true;
 		for (String a : allowed) {
-			if (choice == a)
+			if (choice.equals(a))
 				return true;
 		}
 		return false;

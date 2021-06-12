@@ -70,7 +70,7 @@ CREATE TABLE Doctor
 
 CREATE TABLE Appointment
 (	
-	appnt_ID SERIAL NOT NULL,	
+	appnt_ID SERIAL NOT NULL,
 	adate DATE NOT NULL,
 	time_slot VARCHAR(11),
 	status _STATUS,
