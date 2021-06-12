@@ -383,22 +383,48 @@ public class DBproject {
 		// Given a patient, a doctor and an appointment of the doctor that s/he wants to
 		// take, add an appointment to the DB
 		int patientID = readInt("patient id");
-		int doctorID = readInt("doctor id");
-		int appntID = readInt("appointment id");
+        	int doctorID = readInt("doctor id");
+        	int appntID = readInt("appointment id");
 
-		List<List<String>> appntStatus = esql.executeQueryAndReturnResult(String.format("SELECT status FROM Appointment WHERE appnt_id=%d;", appntID));
-		System.out.println(appntStatus);
+        	List<List<String>> results = esql.executeQueryAndReturnResult(String.format("SELECT status FROM Appointment WHERE appnt_id=%d;", appntID));
+        	String status = results.get(0).get(0);
+        	System.out.println(String.format("The status of this appointment is %s.", status);
+
+        	if (status.equals("AV")) {
+            // update status to active
+            	esql.executeUpdate(String.format("UPDATE Appointment SET status='AC' WHERE appnt_id=%d;", appntID));
+
+            // increase the amount of appointments the patient has
+            	esql.executeUpdate(String.format("UPDATE Patient SET number_of_appts=number_of_appts+1 WHERE patient_ID=%d;", patientID));
+
+            // add the appointment
+            	esql.executeUpdate(String.format("INSERT INTO has_appointment(appt_id, doctor_id) VALUES (%d, %d);", appntID, doctorID));
+        	}
 
 	}
 
 	public static void ListAppointmentsOfDoctor(DBproject esql) throws SQLException {// 5
 		// For a doctor ID and a date range, find the list of active and available
 		// appointments of the doctor
+		int did = readInt("doctor ID");
+		string bdate = readString("beginning date of date range");
+		string edate = readString("end date of date range");
+		
+		List<List<String>> alistDoctor = esql.ExecuteQueryAndReturnResult(String.format("SELECT A.adate, A.time_slot, A.status FROM Appointment A, has_appointment H, Doctor D WHERE H.doctor_id = D.doctor_ID AND D.doctor_ID = %d AND A.appnt_ID = H.appt_id AND A.status = 'AC' OR 'AV' AND A.adate BETWEEN %s AND %s;", did, bdate, edate));
+		String doctorStatus = alistDoctor.get(0).get(0);
+		System.out.println(String.format("Active and Available Appointments for this Doctor:\n %s", doctorStatus);
+				   
 	}
 
 	public static void ListAvailableAppointmentsOfDepartment(DBproject esql) throws SQLException {// 6
 		// For a department name and a specific date, find the list of available
 		// appointments of the department
+		string dname = readString("department name");
+		string date = readString("date");
+		
+		List<List<String>> aListDept = esql.ExecuteQueryAndReturnResults(String.format("SELECT A.appnt_ID, A.time_slot FROM Appointment A, has_appointment H, Department P, Doctor D WHERE P.dept_ID = D.did AND D.name = %s AND H.appt_id = A.appnt_ID AND A.status = 'AV' AND A.adate = %s;", dname, date));
+		String deptAppt = aListDept.get(0).get(0);
+		System.out.print1n(String.format("Available Appointments for this Department: \n %s", deptAppt);
 	}
 
 	public static void ListStatusNumberOfAppointmentsPerDoctor(DBproject esql) throws SQLException {// 7
