@@ -423,13 +423,41 @@ public class DBproject {
 		string date = readString("date");
 		
 		List<List<String>> aListDept = esql.ExecuteQueryAndReturnResults(String.format("SELECT A.appnt_ID, A.time_slot FROM Appointment A, has_appointment H, Department P, Doctor D WHERE P.dept_ID = D.did AND D.name = %s AND H.appt_id = A.appnt_ID AND A.status = 'AV' AND A.adate = %s;", dname, date));
-		String deptAppt = aListDept.get(0).get(0);
+		string deptAppt = aListDept.get(0).get(0);
 		System.out.print1n(String.format("Available Appointments for this Department: \n %s", deptAppt);
 	}
 
 	public static void ListStatusNumberOfAppointmentsPerDoctor(DBproject esql) throws SQLException {// 7
 		// Count number of different types of appointments per doctors and list them in
 		// descending order
+		List<List<String>> WList = esql.ExecuteQueryAndReturnResults(String.format("SELECT doctor_id, COUNT(*) FROM Appointment INNER JOIN has_appointment ON Appointment.appnt_id = has_appointment.appt_id WHERE Appointment.status='WL' GROUP BY doctor_id;"));
+		string waitList = WList.get(0).get(0);
+		
+		List<List<String>> PAList = esql.ExecuteQueryAndReturnResults(String.format("SELECT doctor_id, COUNT(*) FROM Appointment INNER JOIN has_appointment ON Appointment.appnt_id = has_appointment.appt_id WHERE Appointment.status='PA' GROUP BY doctor_id;"));
+		string pastList = PAList.get(0).get(0);
+		
+		List<List<String>> ACList = esql.ExecuteQueryAndReturnResults(String.format("SELECT doctor_id, COUNT(*) FROM Appointment INNER JOIN has_appointment ON Appointment.appnt_id = has_appointment.appt_id WHERE Appointment.status='AC' GROUP BY doctor_id;"));
+		string activeList = ACList.get(0).get(0);
+		
+		List<List<String>> AVList = esql.ExecuteQueryAndReturnResults(String.format("SELECT doctor_id, COUNT(*) FROM Appointment INNER JOIN has_appointment ON Appointment.appnt_id = has_appointment.appt_id WHERE Appointment.status='AV' GROUP BY doctor_id;"));
+		string availableList = AVList.get(0).get(0);
+		
+		List<List<List<String>>> newList = {WList, PAList, ACList, AVList};
+		
+		string index = "0";
+		
+		for (int i = 0; i < WList.size(); i++){		// This loop iterates through the list of doctors    i = doctor
+			for(int j = 0; j < 4; j++){		// this loop iterates through all of the SAME doctors appointments j = which appointment
+				
+				if(
+				
+				//for( int k = 0; k < 4; k++){	// This loop prints out the greatest after x index	k = find max
+					
+				//}
+			}	
+		}
+			
+		
 	}
 
 	public static void FindPatientsCountWithStatus(DBproject esql) throws SQLException {// 8
